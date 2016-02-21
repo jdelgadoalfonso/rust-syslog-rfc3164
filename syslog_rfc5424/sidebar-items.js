@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["SyslogFacility","Syslog facilities. Taken From RFC 5424, but I've heard that some platforms mix these around. Names are from Linux."],["SyslogSeverity","Syslog Severities from RFC 5424."]],"mod":[["message","In-memory representation of a single Syslog message."],["parser",""]]});

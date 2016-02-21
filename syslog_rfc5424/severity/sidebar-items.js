@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["SyslogSeverity","Syslog Severities from RFC 5424."]]});
