@@ -85,8 +85,6 @@
 <span id="42">42</span>
 <span id="43">43</span>
 <span id="44">44</span>
-<span id="45">45</span>
-<span id="46">46</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! Parser for [RFC 5424](https://tools.ietf.org/html/rfc5424) Syslog messages. Not to be confused</span>
 <span class='doccomment'>//! with the older [RFC 3164](https://tools.ietf.org/html/rfc3164) BSD Syslog protocol, which many</span>
@@ -121,8 +119,6 @@
 <span class='doccomment'>//!    so I&#39;m just not supporting that. Most &quot;real&quot; syslog servers barf on it anway.</span>
 <span class='doccomment'>//!</span>
 <span class='attribute'>#[<span class='ident'>macro_use</span>]</span> <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>assert_matches</span>;
-<span class='attribute'>#[<span class='ident'>macro_use</span>]</span> <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>lazy_static</span>;
-<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>regex</span>;
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>time</span>;
 
 <span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>message</span>;
