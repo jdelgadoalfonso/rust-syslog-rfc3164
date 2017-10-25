@@ -4,18 +4,20 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="API documentation for the Rust `StructuredDataMap` type in crate `syslog_rfc5424`.">
-    <meta name="keywords" content="rust, rustlang, rust-lang, StructuredDataMap">
+    <meta name="description" content="API documentation for the Rust `StructuredDataElement` type in crate `syslog_rfc5424`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, StructuredDataElement">
 
-    <title>syslog_rfc5424::message::StructuredDataMap - Rust</title>
+    <title>syslog_rfc5424::message::StructuredDataElement - Rust</title>
 
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
     <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
     <link rel="stylesheet" type="text/css" href="../../main.css">
+    
 
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc type">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -27,7 +29,7 @@
 
     <nav class="sidebar">
         
-        <p class='location'><a href='../index.html'>syslog_rfc5424</a>::<wbr><a href='index.html'>message</a></p><script>window.sidebarCurrent = {name: 'StructuredDataMap', ty: 'type', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+        <p class='location'>Type Definition StructuredDataElement</p><p class='location'><a href='../index.html'>syslog_rfc5424</a>::<wbr><a href='index.html'>message</a></p><script>window.sidebarCurrent = {name: 'StructuredDataElement', ty: 'type', relpath: ''};</script><script defer src="sidebar-items.js"></script>
     </nav>
 
     <nav class="sub">
@@ -41,14 +43,13 @@
         </form>
     </nav>
 
-    <section id='main' class="content type">
-<h1 class='fqn'><span class='in-band'><a href='../index.html'>syslog_rfc5424</a>::<wbr><a href='index.html'>message</a>::<wbr><a class='type' href=''>StructuredDataMap</a></span><span class='out-of-band'><span id='render-detail'>
-            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
-                [<span class='inner'>&#x2212;</span>]
-            </a>
-        </span><a id='src-159' class='srclink' href='../../src/syslog_rfc5424/message.rs.html#52' title='goto source code'>[src]</a></span></h1>
-<pre class='rust typedef'>type StructuredDataMap = <a class='struct' href='https://doc.rust-lang.org/nightly/collections/btree/map/struct.BTreeMap.html' title='collections::btree::map::BTreeMap'>BTreeMap</a>&lt;<a class='type' href='../../syslog_rfc5424/message/type.SDIDType.html' title='syslog_rfc5424::message::SDIDType'>SDIDType</a>, <a class='struct' href='https://doc.rust-lang.org/nightly/collections/btree/map/struct.BTreeMap.html' title='collections::btree::map::BTreeMap'>BTreeMap</a>&lt;<a class='type' href='../../syslog_rfc5424/message/type.SDParamIDType.html' title='syslog_rfc5424::message::SDParamIDType'>SDParamIDType</a>, <a class='type' href='../../syslog_rfc5424/message/type.SDParamValueType.html' title='syslog_rfc5424::message::SDParamValueType'>SDParamValueType</a>&gt;&gt;;</pre><div class='docblock'><p>Map that StructuredData can be converted into</p>
-</div></section>
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Type Definition <a href='../index.html'>syslog_rfc5424</a>::<wbr><a href='index.html'>message</a>::<wbr><a class="type" href=''>StructuredDataElement</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/syslog_rfc5424/message.rs.html#61' title='goto source code'>[src]</a></span></h1>
+<pre class='rust typedef'>type StructuredDataElement = <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/btree/map/struct.BTreeMap.html" title="struct alloc::btree::map::BTreeMap">BTreeMap</a>&lt;<a class="type" href="../../syslog_rfc5424/message/type.SDParamIDType.html" title="type syslog_rfc5424::message::SDParamIDType">SDParamIDType</a>, <a class="type" href="../../syslog_rfc5424/message/type.SDParamValueType.html" title="type syslog_rfc5424::message::SDParamValueType">SDParamValueType</a>&gt;;</pre></section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>
@@ -71,6 +72,8 @@
                     <dd>Move down in search results</dd>
                     <dt>&#9166;</dt>
                     <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
                 </dl>
             </div>
 
@@ -91,7 +94,7 @@
 
                 <p>
                     Search functions by type signature (e.g.
-                    <code>vec -> usize</code>)
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
                 </p>
             </div>
         </div>
@@ -102,11 +105,8 @@
     <script>
         window.rootPath = "../../";
         window.currentCrate = "syslog_rfc5424";
-        window.playgroundUrl = "";
     </script>
-    <script src="../../jquery.js"></script>
     <script src="../../main.js"></script>
-    
     <script defer src="../../search-index.js"></script>
 </body>
 </html>

@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["SyslogFacility","Syslog facilities. Taken From RFC 5424, but I've heard that some platforms mix these around. Names are from Linux."]]});
