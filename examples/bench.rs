@@ -1,7 +1,7 @@
+extern crate serde_json;
+extern crate syslog_rfc3164;
 #[macro_use]
 extern crate timeit;
-extern crate syslog_rfc3164;
-extern crate serde_json;
 
 use syslog_rfc3164::parse_message;
 
@@ -30,7 +30,8 @@ fn main() {
         parse_message(simple_message).unwrap();
     });
     println!("Parsing a complicated message:");
-    let complicated_message = "<78>Jan 8 12:14:16 host1 CROND no such thing as a complicated message in syslog 3164?";
+    let complicated_message =
+        "<78>Jan 8 12:14:16 host1 CROND no such thing as a complicated message in syslog 3164?";
     timeit!({
         parse_message(complicated_message).unwrap();
     });

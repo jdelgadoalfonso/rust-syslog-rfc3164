@@ -5,10 +5,9 @@ use std::string;
 
 use time;
 
-
 use severity;
 use facility;
-use message::{time_t,SyslogMessage};
+use message::{time_t, ProcIdType, SyslogMessage};
 
 #[derive(Debug)]
 pub enum ParseErr {
@@ -24,7 +23,7 @@ pub enum ParseErr {
     UnicodeError(string::FromUtf8Error),
     ExpectedTokenErr(char),
     IntConversionErr(num::ParseIntError),
-    MissingField(&'static str)
+    MissingField(&'static str),
 }
 
 // We parse with this super-duper-dinky hand-coded recursive descent parser because we don't really
@@ -69,7 +68,6 @@ macro_rules! take_item {
     }}
 }
 
-
 type ParseResult<T> = Result<T, ParseErr>;
 
 macro_rules! take_char {
@@ -89,8 +87,9 @@ macro_rules! take_char {
 }
 
 fn take_while<F>(input: &str, f: F, max_chars: usize) -> (&str, Option<&str>)
-    where F: Fn(char) -> bool {
-
+where
+    F: Fn(char) -> bool,
+{
     for (idx, chr) in input.char_indices() {
         if !f(chr) {
             return (&input[..idx], Some(&input[idx..]));
@@ -125,10 +124,8 @@ fn parse_month(s: &str) -> ParseResult<(i32, &str)> {
         "Oct" => Ok((10, rest)),
         "Nov" => Ok((11, rest)),
         "Dec" => Ok((12, rest)),
-        _ => Err(ParseErr::MonthConversionErr(res.into()))
+        _ => Err(ParseErr::MonthConversionErr(res.into())),
     }
-
-
 }
 
 fn parse_num(s: &str, min_digits: usize, max_digits: usize) -> ParseResult<(i32, &str)> {
@@ -139,7 +136,10 @@ fn parse_num(s: &str, min_digits: usize, max_digits: usize) -> ParseResult<(i32,
     } else if res.len() > max_digits {
         Err(ParseErr::TooManyDigits)
     } else {
-        Ok((i32::from_str(res).map_err(ParseErr::IntConversionErr)?, rest))
+        Ok((
+            i32::from_str(res).map_err(ParseErr::IntConversionErr)?,
+            rest,
+        ))
     }
 }
 
@@ -147,7 +147,7 @@ fn parse_timestamp(m: &str) -> ParseResult<(Option<time_t>, &str)> {
     // Jan 8 12:14:16
     let mut rest = m;
     if rest.starts_with('-') {
-        return Ok((None, &rest[1..]))
+        return Ok((None, &rest[1..]));
     }
 
     let mut tm = time::empty_tm();
@@ -169,7 +169,7 @@ fn parse_timestamp(m: &str) -> ParseResult<(Option<time_t>, &str)> {
         Some(year) => {
             tm.tm_year = year - 1900;
             rest = maybe_rest;
-        },
+        }
         None => {
             tm.tm_year = time::now().tm_year;
         }
@@ -178,9 +178,13 @@ fn parse_timestamp(m: &str) -> ParseResult<(Option<time_t>, &str)> {
     Ok((Some(tm.to_utc().to_timespec().sec), rest))
 }
 
-fn parse_term(m: &str, min_length: usize, max_length: usize) -> ParseResult<(Option<String>, &str)> {
+fn parse_term(
+    m: &str,
+    min_length: usize,
+    max_length: usize,
+) -> ParseResult<(Option<String>, &str)> {
     if m.starts_with('-') {
-        return Ok((None, &m[1..]))
+        return Ok((None, &m[1..]));
     }
     let byte_ary = m.as_bytes();
     for (idx, chr) in byte_ary.iter().enumerate() {
@@ -200,6 +204,29 @@ fn parse_term(m: &str, min_length: usize, max_length: usize) -> ParseResult<(Opt
     Err(ParseErr::UnexpectedEndOfInput)
 }
 
+fn parse_hostname(m: &str) -> ParseResult<(Option<String>, &str)> {
+    let min_length = 1;
+    let max_length = 255;
+    if m.starts_with('-') {
+        return Ok((None, &m[1..]));
+    }
+    let byte_ary = m.as_bytes();
+    for (idx, chr) in byte_ary.iter().enumerate() {
+        //        println!("idx={:?}, buf={:?}, chr={:?}", idx, &m[0..idx], chr);
+        if (*chr < 33 || *chr > 126) && (*chr != 91 || *chr == 93) {
+            if idx < min_length {
+                return Err(ParseErr::TooFewDigits);
+            }
+            let utf8_ary = str::from_utf8(&byte_ary[..idx]).map_err(ParseErr::BaseUnicodeError)?;
+            return Ok((Some(String::from(utf8_ary)), &m[idx..]));
+        }
+        if idx >= max_length || *chr == 91 || *chr == 93 {
+            let utf8_ary = str::from_utf8(&byte_ary[..idx]).map_err(ParseErr::BaseUnicodeError)?;
+            return Ok((Some(String::from(utf8_ary)), &m[idx..]));
+        }
+    }
+    Err(ParseErr::UnexpectedEndOfInput)
+}
 
 fn parse_message_s(m: &str) -> ParseResult<SyslogMessage> {
     let mut rest = m;
@@ -211,12 +238,27 @@ fn parse_message_s(m: &str) -> ParseResult<SyslogMessage> {
     //println!("got version {:?}, rest={:?}", version, rest);
     let timestamp = take_item!(parse_timestamp(rest), rest);
     take_char!(rest, ' ');
-    let hostname = take_item!(parse_term(rest, 1, 255), rest);
-    take_char!(rest, ' ');
+    let hostname = take_item!(parse_hostname(rest), rest);
+    rest = maybe_expect_char!(rest, '[').unwrap_or(rest);
+    rest = maybe_expect_char!(rest, ' ').unwrap_or(rest);
+
+    //    println!("rest: {:?}", rest);
+    let mut maybe_rest = rest;
+    let proc_id: Option<ProcIdType> = match maybe_take_item!(parse_hostname(rest), maybe_rest) {
+        Some(Some(proc_id_r)) => {
+            let res = Some(match i32::from_str(&proc_id_r) {
+                Ok(n) => ProcIdType::PID(n),
+                Err(_) => ProcIdType::Name(proc_id_r),
+            });
+            rest = maybe_rest;
+            res
+        }
+        _ => None,
+    };
     //println!("got hostname {:?}, rest={:?}", hostname, rest);
     let tag = take_item!(parse_term(rest, 1, 255), rest);
     take_char!(rest, ' ');
-    //println!("got tag {:?} rest={:?}", tag, rest)
+    //    println!("got tag {:?} rest={:?}", tag, rest);
 
     let msg = String::from(rest);
 
@@ -226,12 +268,11 @@ fn parse_message_s(m: &str) -> ParseResult<SyslogMessage> {
         version: 0,
         timestamp: timestamp,
         hostname: hostname,
+        proc_id: proc_id,
         tag: tag,
-        msg: msg
+        msg: msg,
     })
 }
-
-
 
 /// Parse a string into a `SyslogMessage` object
 ///
@@ -252,14 +293,13 @@ fn parse_message_s(m: &str) -> ParseResult<SyslogMessage> {
 ///
 /// assert!(message.hostname.unwrap() == "host1");
 /// ```
-pub fn parse_message<S: AsRef<str>> (s: S) -> ParseResult<SyslogMessage> {
+pub fn parse_message<S: AsRef<str>>(s: S) -> ParseResult<SyslogMessage> {
     parse_message_s(s.as_ref())
 }
 
-
 #[cfg(test)]
 mod tests {
-    use super::{parse_message};
+    use super::{parse_hostname, parse_message, ProcIdType};
     use message;
 
     use facility::SyslogFacility;
@@ -278,7 +318,8 @@ mod tests {
 
     #[test]
     fn test_timestamp_without_year() {
-        let msg : message::SyslogMessage = parse_message("<1>Jan 8 12:14:16 host tag -").expect("Should parse empty message");
+        let msg: message::SyslogMessage =
+            parse_message("<1>Jan 8 12:14:16 host tag -").expect("Should parse empty message");
         let mut tm = time::empty_tm();
         tm.tm_mon = 0;
         tm.tm_mday = 8;
@@ -295,17 +336,29 @@ mod tests {
 
     #[test]
     fn test_timestamp_with_year_in_message() {
-        let msg = parse_message("<1>Jan 8 12:14:16 1995 host - - - -").expect("Should parse empty message");
+        let msg = parse_message("<1>Jan 8 12:14:16 1995 host - - - -")
+            .expect("Should parse empty message");
         assert_eq!(msg.timestamp, Some(789567256));
     }
 
     #[test]
+    fn test_parsing_host_and_rest() {
+        let data = "host1[123]";
+        let res = parse_hostname(&data);
+        let (hostname, procid) = res.unwrap();
+        assert_eq!(hostname.unwrap(), "host1".to_owned());
+        assert_eq!(procid, "[123]".to_owned());
+    }
+
+    #[test]
     fn test_complex() {
-        let msg = parse_message("<78>Jan  8 12:14:16 2017 host1 CROND some_message").expect("Should parse complex message");
+        let msg = parse_message("<78>Jan  8 12:14:16 2017 host1[123] CROND some_message")
+            .expect("Should parse complex message");
         assert_eq!(msg.facility, SyslogFacility::LOG_CRON);
         assert_eq!(msg.severity, SyslogSeverity::SEV_INFO);
         assert_eq!(msg.hostname, Some(String::from("host1")));
-        assert_eq!(msg.msg, String::from("some_message"));
+        assert_eq!(msg.proc_id, Some(ProcIdType::PID(123)));
+        assert_eq!(msg.msg, String::from("CROND some_message"));
         assert_eq!(msg.timestamp, Some(1483877656));
     }
 

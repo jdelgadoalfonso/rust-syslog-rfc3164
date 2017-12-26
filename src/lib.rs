@@ -30,13 +30,15 @@
 //!    message. Rust doesn't have a convenient way to only treat *some* of a buffer as utf-8,
 //!    so I'm just not supporting that. Most "real" syslog servers barf on it anway.
 //!
+#![feature(match_default_bindings)]
+
 #[cfg(test)]
 extern crate assert_matches;
-extern crate time;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate time;
 
 pub mod message;
 mod severity;
