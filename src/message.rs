@@ -36,6 +36,7 @@ pub struct SyslogMessage {
     pub version: i32,
     pub timestamp: Option<time_t>,
     pub hostname: Option<String>,
+    pub appname: Option<String>,
     pub proc_id: Option<ProcIdType>,
     pub tag: Option<String>,
     pub msg: String,
@@ -57,6 +58,7 @@ mod tests {
             version: 1,
             timestamp: None,
             hostname: None,
+            appname: None,
             proc_id: None,
             tag: None,
             msg: String::from("")
@@ -66,6 +68,6 @@ mod tests {
 //        println!("{:?}", encoded);
         // XXX: we don't have a guaranteed order, I don't think, so this might break with minor
         // version changes. *shrug*
-        assert_eq!(encoded, "{\"severity\":\"info\",\"facility\":\"kern\",\"version\":1,\"timestamp\":null,\"hostname\":null,\"proc_id\":null,\"tag\":null,\"msg\":\"\"}");
+        assert_eq!(encoded, "{\"severity\":\"info\",\"facility\":\"kern\",\"version\":1,\"timestamp\":null,\"hostname\":null,\"appname\":null,\"proc_id\":null,\"tag\":null,\"msg\":\"\"}");
     }
 }

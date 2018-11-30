@@ -213,14 +213,14 @@ fn parse_hostname(m: &str) -> ParseResult<(Option<String>, &str)> {
     let byte_ary = m.as_bytes();
     for (idx, chr) in byte_ary.iter().enumerate() {
         //        println!("idx={:?}, buf={:?}, chr={:?}", idx, &m[0..idx], chr);
-        if (*chr < 33 || *chr > 126) && (*chr != 91 || *chr == 93) {
+        if (*chr < 33 || *chr > 126) && (*chr != 91 || *chr == 93 || *chr == 58) {
             if idx < min_length {
                 return Err(ParseErr::TooFewDigits);
             }
             let utf8_ary = str::from_utf8(&byte_ary[..idx]).map_err(ParseErr::BaseUnicodeError)?;
             return Ok((Some(String::from(utf8_ary)), &m[idx..]));
         }
-        if idx >= max_length || *chr == 91 || *chr == 93 {
+        if idx >= max_length || *chr == 91 || *chr == 93 || *chr == 58 {
             let utf8_ary = str::from_utf8(&byte_ary[..idx]).map_err(ParseErr::BaseUnicodeError)?;
             return Ok((Some(String::from(utf8_ary)), &m[idx..]));
         }
@@ -239,6 +239,8 @@ fn parse_message_s(m: &str) -> ParseResult<SyslogMessage> {
     let timestamp = take_item!(parse_timestamp(rest), rest);
     take_char!(rest, ' ');
     let hostname = take_item!(parse_hostname(rest), rest);
+    take_char!(rest, ' ');
+    let appname = take_item!(parse_hostname(rest), rest);
     rest = maybe_expect_char!(rest, '[').unwrap_or(rest);
     rest = maybe_expect_char!(rest, ' ').unwrap_or(rest);
 
@@ -268,6 +270,7 @@ fn parse_message_s(m: &str) -> ParseResult<SyslogMessage> {
         version: 0,
         timestamp: timestamp,
         hostname: hostname,
+        appname: appname,
         proc_id: proc_id,
         tag: tag,
         msg: msg,
@@ -309,7 +312,7 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let msg = parse_message("<1>- - - - - -").expect("Should parse empty message");
+        let msg = parse_message("<1>- - - - - - -").expect("Should parse empty message");
         assert!(msg.facility == SyslogFacility::LOG_KERN);
         assert!(msg.severity == SyslogSeverity::SEV_ALERT);
         assert!(msg.timestamp.is_none());
@@ -336,7 +339,7 @@ mod tests {
 
     #[test]
     fn test_timestamp_with_year_in_message() {
-        let msg = parse_message("<1>Jan 8 12:14:16 1995 host - - - -")
+        let msg = parse_message("<1>Jan 8 12:14:16 1995 host: - - - -")
             .expect("Should parse empty message");
         assert_eq!(msg.timestamp, Some(789567256));
     }
@@ -351,8 +354,15 @@ mod tests {
     }
 
     #[test]
+    fn test_cht_log() {
+        let msg = parse_message("<31>Nov 28 13:35:19 LEDE cht[2]: [WIFI ][DBG ]      src/modules/WIFI/WIFI_hostap.c:1147: Unix socket was added to list")
+            .expect("Should parse cht message");
+    	println!("{:?}", msg);
+    }
+
+    #[test]
     fn test_complex() {
-        let msg = parse_message("<78>Jan  8 12:14:16 2017 host1[123] CROND some_message")
+        let msg = parse_message("<78>Jan  8 12:14:16 2017 host1[123]: CROND some_message")
             .expect("Should parse complex message");
         assert_eq!(msg.facility, SyslogFacility::LOG_CRON);
         assert_eq!(msg.severity, SyslogSeverity::SEV_INFO);
